@@ -15,34 +15,41 @@
  */
 package com.squareup.picasso;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.NetworkInfo;
 
-import java.io.IOException;
+import com.squareup.picasso.Picasso.LoadedFrom;
 
 /**
- * {@link RequestHandler} allows you to extend Picasso to load images
- * in ways that are not supported by default in the library.
+ * {@link RequestHandler} allows you to extend Picasso to load images in ways
+ * that are not supported by default in the library.
  * <p>
  * <h2>Usage</h2>
- * <p>{@link RequestHandler} must be subclassed to be used. You will have to
+ * <p>
+ * {@link RequestHandler} must be subclassed to be used. You will have to
  * override two methods ({@link #canHandleRequest(Request)} and
- * {@link #load(Request)}) with your custom logic to load images.</p>
- *
- * <p>You should then register your {@link RequestHandler} using
- * {@link Picasso.Builder#addRequestHandler(RequestHandler)}</p>
- *
- * <b>NOTE:</b> This is a beta feature. The API is subject to change in a backwards
- * incompatible way at any time.
- *
+ * {@link #load(Request)}) with your custom logic to load images.
+ * </p>
+ * 
+ * <p>
+ * You should then register your {@link RequestHandler} using
+ * {@link Picasso.Builder#addRequestHandler(RequestHandler)}
+ * </p>
+ * 
+ * <b>NOTE:</b> This is a beta feature. The API is subject to change in a
+ * backwards incompatible way at any time.
+ * 
  * @see Picasso.Builder#addRequestHandler(RequestHandler)
  */
 public abstract class RequestHandler {
   /**
    * {@link Result} represents the result of a {@link #load(Request)} call in a
    * {@link RequestHandler}.
-   *
+   * 
    * @see RequestHandler
    * @see #load(Request)
    */
@@ -50,37 +57,63 @@ public abstract class RequestHandler {
     private final Picasso.LoadedFrom loadedFrom;
     private final Bitmap bitmap;
     private final int exifOrientation;
+    private final InputStream gifStream; // For GIFs only
 
     public Result(Bitmap bitmap, Picasso.LoadedFrom loadedFrom) {
       this(bitmap, loadedFrom, 0);
     }
 
+    /**
+     * Use only when stream has been identified as containing GIF data.
+     * 
+     * @param gifStream {@link InputStream} containing GIF data.
+     * @param loadedFrom {@link LoadedFrom}.
+     */
+    public Result(InputStream gifStream, Picasso.LoadedFrom loadedFrom) {
+      this.gifStream = gifStream;
+      this.bitmap = null;
+      this.loadedFrom = loadedFrom;
+      this.exifOrientation = 0;
+    }
+
     Result(Bitmap bitmap, Picasso.LoadedFrom loadedFrom, int exifOrientation) {
       this.bitmap = bitmap;
+      this.gifStream = null;
       this.loadedFrom = loadedFrom;
       this.exifOrientation = exifOrientation;
     }
 
     /**
-     * Returns the resulting {@link Bitmap} generated
-     * from a {@link #load(Request)} call.
+     * Returns the resulting {@link Bitmap} generated from a
+     * {@link #load(Request)} call.
      */
     public Bitmap getBitmap() {
       return bitmap;
     }
 
     /**
-     * Returns the resulting {@link Picasso.LoadedFrom} generated
-     * from a {@link #load(Request)} call.
+     * Returns the resulting {@link Picasso.LoadedFrom} generated from a
+     * {@link #load(Request)} call.
      */
     public Picasso.LoadedFrom getLoadedFrom() {
       return loadedFrom;
     }
 
     /**
-     * Returns the resulting EXIF orientation generated
-     * from a {@link #load(Request)} call. This is only accessible
-     * to built-in RequestHandlers.
+     * Returns an {@link InputStream} containing GIF data. If this is non-null,
+     * it is an indication that the resource was identified as a GIF and
+     * <b>not</b> decoded into a {@link Bitmap}, thus {@link #getBitmap()} will
+     * return <code>null</code>. This stream can then be used by a separate GIF
+     * decoding library, since Picasso does not support animated GIFs.
+     */
+    public InputStream getGifStream() {
+      return gifStream;
+    }
+
+    /**
+     * Returns the resulting EXIF orientation generated from a
+     * {@link #load(Request)} call. This is only accessible to built-in
+     * RequestHandlers.
      */
     int getExifOrientation() {
       return exifOrientation;
@@ -95,7 +128,7 @@ public abstract class RequestHandler {
 
   /**
    * Loads an image for the given {@link Request}.
-   *
+   * 
    * @param data the {@link android.net.Uri} to load the image from.
    * @return A {@link Result} instance representing the result.
    */
@@ -114,8 +147,8 @@ public abstract class RequestHandler {
   }
 
   /**
-   * Lazily create {@link BitmapFactory.Options} based in given
-   * {@link Request}, only instantiating them if needed.
+   * Lazily create {@link BitmapFactory.Options} based in given {@link Request},
+   * only instantiating them if needed.
    */
   static BitmapFactory.Options createBitmapOptions(Request data) {
     final boolean justBounds = data.hasSize();
@@ -147,9 +180,8 @@ public abstract class RequestHandler {
     if (height > reqHeight || width > reqWidth) {
       final int heightRatio = (int) Math.floor((float) height / (float) reqHeight);
       final int widthRatio = (int) Math.floor((float) width / (float) reqWidth);
-      sampleSize = request.centerInside
-          ? Math.max(heightRatio, widthRatio)
-          : Math.min(heightRatio, widthRatio);
+      sampleSize = request.centerInside ? Math.max(heightRatio, widthRatio) : Math.min(heightRatio,
+          widthRatio);
     }
     options.inSampleSize = sampleSize;
     options.inJustDecodeBounds = false;

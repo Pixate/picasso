@@ -15,6 +15,24 @@
  */
 package com.squareup.picasso;
 
+import static android.content.Context.ACTIVITY_SERVICE;
+import static android.content.pm.ApplicationInfo.FLAG_LARGE_HEAP;
+import static android.os.Build.VERSION.SDK_INT;
+import static android.os.Build.VERSION_CODES.HONEYCOMB;
+import static android.os.Build.VERSION_CODES.HONEYCOMB_MR1;
+import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
+import static android.provider.Settings.System.AIRPLANE_MODE_ON;
+import static com.squareup.picasso.Picasso.TAG;
+import static java.lang.String.format;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.concurrent.ThreadFactory;
+
 import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.content.ContentResolver;
@@ -27,25 +45,9 @@ import android.os.Process;
 import android.os.StatFs;
 import android.provider.Settings;
 import android.util.Log;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.concurrent.ThreadFactory;
-
-import static android.content.Context.ACTIVITY_SERVICE;
-import static android.content.pm.ApplicationInfo.FLAG_LARGE_HEAP;
-import static android.os.Build.VERSION.SDK_INT;
-import static android.os.Build.VERSION_CODES.HONEYCOMB;
-import static android.os.Build.VERSION_CODES.HONEYCOMB_MR1;
-import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
-import static android.provider.Settings.System.AIRPLANE_MODE_ON;
-import static com.squareup.picasso.Picasso.TAG;
-import static java.lang.String.format;
 
 final class Utils {
+
   static final String THREAD_PREFIX = "Picasso-";
   static final String THREAD_IDLE_NAME = THREAD_PREFIX + "Idle";
   static final int DEFAULT_READ_TIMEOUT = 20 * 1000; // 20s
@@ -81,6 +83,7 @@ final class Utils {
   static final String VERB_PAUSED = "paused";
   static final String VERB_RESUMED = "resumed";
 
+  // @formatter:off
   /* WebP file header
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -92,9 +95,13 @@ final class Utils {
     |      'W'      |      'E'      |      'B'      |      'P'      |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
   */
+  // @formatter:on
   private static final int WEBP_FILE_HEADER_SIZE = 12;
   private static final String WEBP_FILE_HEADER_RIFF = "RIFF";
   private static final String WEBP_FILE_HEADER_WEBP = "WEBP";
+
+  private static final int GIF_FILE_HEADER_SIZE = 4;
+  private static final String GIF_FILE_HEADER = "GIF8";
 
   private Utils() {
     // No instances.
@@ -142,7 +149,8 @@ final class Utils {
     List<Action> actions = hunter.getActions();
     if (actions != null) {
       for (int i = 0, count = actions.size(); i < count; i++) {
-        if (i > 0 || action != null) builder.append(", ");
+        if (i > 0 || action != null)
+          builder.append(", ");
         builder.append(actions.get(i).request.logId());
       }
     }
@@ -192,7 +200,7 @@ final class Utils {
     }
 
     if (data.transformations != null) {
-      //noinspection ForLoopReplaceableByForEach
+      // noinspection ForLoopReplaceableByForEach
       for (int i = 0, count = data.transformations.size(); i < count; i++) {
         builder.append(data.transformations.get(i).key());
         builder.append('\n');
@@ -203,14 +211,18 @@ final class Utils {
   }
 
   static void closeQuietly(InputStream is) {
-    if (is == null) return;
+    if (is == null)
+      return;
     try {
       is.close();
     } catch (IOException ignored) {
     }
   }
 
-  /** Returns {@code true} if header indicates the response body was loaded from the disk cache. */
+  /**
+   * Returns {@code true} if header indicates the response body was loaded from the disk
+   * cache.
+   */
   static boolean parseResponseSourceHeader(String header) {
     if (header == null) {
       return false;
@@ -245,23 +257,21 @@ final class Utils {
     }
 
     if (okHttpClient != okUrlFactory) {
-      throw new RuntimeException(""
-          + "Picasso detected an unsupported OkHttp on the classpath.\n"
+      throw new RuntimeException("" + "Picasso detected an unsupported OkHttp on the classpath.\n"
           + "To use OkHttp with this version of Picasso, you'll need:\n"
           + "1. com.squareup.okhttp:okhttp:1.6.0 (or newer)\n"
           + "2. com.squareup.okhttp:okhttp-urlconnection:1.6.0 (or newer)\n"
           + "Note that OkHttp 2.0.0+ is supported!");
     }
 
-    return okHttpClient
-        ? OkHttpLoaderCreator.create(context)
+    return okHttpClient ? OkHttpLoaderCreator.create(context)
         : new UrlConnectionDownloader(context);
   }
 
   static File createDefaultCacheDir(Context context) {
     File cache = new File(context.getApplicationContext().getCacheDir(), PICASSO_CACHE);
     if (!cache.exists()) {
-      //noinspection ResultOfMethodCallIgnored
+      // noinspection ResultOfMethodCallIgnored
       cache.mkdirs();
     }
     return cache;
@@ -298,8 +308,7 @@ final class Utils {
     return Settings.System.getInt(contentResolver, AIRPLANE_MODE_ON, 0) != 0;
   }
 
-  @SuppressWarnings("unchecked")
-  static <T> T getService(Context context, String service) {
+  @SuppressWarnings("unchecked") static <T> T getService(Context context, String service) {
     return (T) context.getSystemService(service);
   }
 
@@ -315,6 +324,16 @@ final class Utils {
       byteArrayOutputStream.write(buffer, 0, n);
     }
     return byteArrayOutputStream.toByteArray();
+  }
+
+  static boolean isGifFile(InputStream stream) throws IOException {
+    byte[] fileHeaderBytes = new byte[GIF_FILE_HEADER_SIZE];
+    boolean isGifFile = false;
+    if (stream.read(fileHeaderBytes, 0, GIF_FILE_HEADER_SIZE) == GIF_FILE_HEADER_SIZE) {
+      isGifFile = GIF_FILE_HEADER.equals(new String(fileHeaderBytes, 0, 4, "US-ASCII"));
+    }
+
+    return isGifFile;
   }
 
   static boolean isWebPFile(InputStream stream) throws IOException {
@@ -334,7 +353,8 @@ final class Utils {
     }
 
     String pkg = data.uri.getAuthority();
-    if (pkg == null) throw new FileNotFoundException("No package provided: " + data.uri);
+    if (pkg == null)
+      throw new FileNotFoundException("No package provided: " + data.uri);
 
     int id;
     List<String> segments = data.uri.getPathSegments();
@@ -363,7 +383,8 @@ final class Utils {
     }
 
     String pkg = data.uri.getAuthority();
-    if (pkg == null) throw new FileNotFoundException("No package provided: " + data.uri);
+    if (pkg == null)
+      throw new FileNotFoundException("No package provided: " + data.uri);
     try {
       PackageManager pm = context.getPackageManager();
       return pm.getResourcesForApplication(pkg);
@@ -372,16 +393,14 @@ final class Utils {
     }
   }
 
-  @TargetApi(HONEYCOMB)
-  private static class ActivityManagerHoneycomb {
+  @TargetApi(HONEYCOMB) private static class ActivityManagerHoneycomb {
     static int getLargeMemoryClass(ActivityManager activityManager) {
       return activityManager.getLargeMemoryClass();
     }
   }
 
   static class PicassoThreadFactory implements ThreadFactory {
-    @SuppressWarnings("NullableProblems")
-    public Thread newThread(Runnable r) {
+    @Override @SuppressWarnings("NullableProblems") public Thread newThread(Runnable r) {
       return new PicassoThread(r);
     }
   }
@@ -397,8 +416,7 @@ final class Utils {
     }
   }
 
-  @TargetApi(HONEYCOMB_MR1)
-  private static class BitmapHoneycombMR1 {
+  @TargetApi(HONEYCOMB_MR1) private static class BitmapHoneycombMR1 {
     static int getByteCount(Bitmap bitmap) {
       return bitmap.getByteCount();
     }
