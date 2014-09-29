@@ -151,7 +151,7 @@ public class BitmapHunterTest {
     TestableBitmapHunter hunter =
         new TestableBitmapHunter(picasso, dispatcher, cache, stats, action, BITMAP_1);
 
-    Bitmap result = hunter.hunt();
+    Bitmap result = hunter.hunt().bitmap;
     verify(cache).get(URI_KEY_1);
     verify(hunter.requestHandler).load(action.getRequest());
     assertThat(result).isEqualTo(BITMAP_1);
@@ -163,7 +163,7 @@ public class BitmapHunterTest {
     TestableBitmapHunter hunter =
         new TestableBitmapHunter(picasso, dispatcher, cache, stats, action, BITMAP_1);
 
-    Bitmap result = hunter.hunt();
+    Bitmap result = hunter.hunt().bitmap;
     verify(cache).get(URI_KEY_1);
     verify(hunter.requestHandler, never()).load(action.getRequest());
     assertThat(result).isEqualTo(BITMAP_1);
@@ -182,7 +182,7 @@ public class BitmapHunterTest {
     Action action = mockAction(CUSTOM_URI_KEY, CUSTOM_URI);
     BitmapHunter hunter = forRequest(mockPicasso(new CustomRequestHandler()), dispatcher,
         cache, stats, action);
-    Bitmap result = hunter.hunt();
+    Bitmap result = hunter.hunt().bitmap;
     assertThat(result).isEqualTo(BITMAP_1);
   }
 

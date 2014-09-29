@@ -19,6 +19,7 @@ import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.net.NetworkInfo;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -39,10 +40,25 @@ import static com.squareup.picasso.Utils.getLogIdsForHunter;
 import static com.squareup.picasso.Utils.log;
 
 class BitmapHunter implements Runnable {
+  static class ImageLoadResult {
+    Bitmap bitmap;
+    InputStream gifStream;
+
+    ImageLoadResult() {
+      this.bitmap = null;
+      this.gifStream = null;
+    }
+
+    ImageLoadResult(Bitmap bitmap) {
+      this.bitmap = bitmap;
+      this.gifStream = null;
+    }
+  }
+
   /**
-   * Global lock for bitmap decoding to ensure that we are only are decoding one at a time. Since
-   * this will only ever happen in background threads we help avoid excessive memory thrashing as
-   * well as potential OOMs. Shamelessly stolen from Volley.
+   * Global lock for bitmap decoding to ensure that we are only are decoding one at a
+   * time. Since this will only ever happen in background threads we help avoid excessive
+   * memory thrashing as well as potential OOMs. Shamelessly stolen from Volley.
    */
   private static final Object DECODE_LOCK = new Object();
 
@@ -66,7 +82,7 @@ class BitmapHunter implements Runnable {
 
   Action action;
   List<Action> actions;
-  Bitmap result;
+  ImageLoadResult result;
   Future<?> future;
   Picasso.LoadedFrom loadedFrom;
   Exception exception;
@@ -124,56 +140,60 @@ class BitmapHunter implements Runnable {
     }
   }
 
-  Bitmap hunt() throws IOException {
-    Bitmap bitmap = null;
+  ImageLoadResult hunt() throws IOException {
+    ImageLoadResult huntResult = new ImageLoadResult();
 
     if (!skipMemoryCache) {
-      bitmap = cache.get(key);
-      if (bitmap != null) {
+      huntResult.bitmap = cache.get(key);
+      if (huntResult.bitmap != null) {
         stats.dispatchCacheHit();
         loadedFrom = MEMORY;
         if (picasso.loggingEnabled) {
           log(OWNER_HUNTER, VERB_DECODED, data.logId(), "from cache");
         }
-        return bitmap;
+        return huntResult;
       }
     }
 
     data.loadFromLocalCacheOnly = (retryCount == 0);
     RequestHandler.Result result = requestHandler.load(data);
     if (result != null) {
-      bitmap = result.getBitmap();
       loadedFrom = result.getLoadedFrom();
       exifRotation = result.getExifOrientation();
+      huntResult.bitmap = result.getBitmap();
+      huntResult.gifStream = result.getGifStream();
     }
 
-    if (bitmap != null) {
+    if (huntResult.bitmap != null) {
       if (picasso.loggingEnabled) {
         log(OWNER_HUNTER, VERB_DECODED, data.logId());
       }
-      stats.dispatchBitmapDecoded(bitmap);
+      stats.dispatchBitmapDecoded(huntResult.bitmap);
       if (data.needsTransformation() || exifRotation != 0) {
         synchronized (DECODE_LOCK) {
           if (data.needsMatrixTransform() || exifRotation != 0) {
-            bitmap = transformResult(data, bitmap, exifRotation);
+            huntResult.bitmap = transformResult(data, huntResult.bitmap, exifRotation);
             if (picasso.loggingEnabled) {
               log(OWNER_HUNTER, VERB_TRANSFORMED, data.logId());
             }
           }
           if (data.hasCustomTransformations()) {
-            bitmap = applyCustomTransformations(data.transformations, bitmap);
+            huntResult.bitmap = applyCustomTransformations(data.transformations, huntResult.bitmap);
             if (picasso.loggingEnabled) {
               log(OWNER_HUNTER, VERB_TRANSFORMED, data.logId(), "from custom transformations");
             }
           }
         }
-        if (bitmap != null) {
-          stats.dispatchBitmapTransformed(bitmap);
+        if (huntResult.bitmap != null) {
+          stats.dispatchBitmapTransformed(huntResult.bitmap);
         }
       }
+    } else if (huntResult.gifStream != null) {
+      // Pixate code to account for a GIF, which we handle
+      // separately.
     }
 
-    return bitmap;
+    return huntResult;
   }
 
   void attach(Action action) {
@@ -282,7 +302,7 @@ class BitmapHunter implements Runnable {
     return requestHandler.supportsReplay();
   }
 
-  Bitmap getResult() {
+  ImageLoadResult getResult() {
     return result;
   }
 

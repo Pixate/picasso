@@ -36,6 +36,8 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 
+import com.squareup.picasso.BitmapHunter.ImageLoadResult;
+
 import static android.content.Context.CONNECTIVITY_SERVICE;
 import static android.content.Intent.ACTION_AIRPLANE_MODE_CHANGED;
 import static android.net.ConnectivityManager.CONNECTIVITY_ACTION;
@@ -345,8 +347,9 @@ class Dispatcher {
   }
 
   void performComplete(BitmapHunter hunter) {
-    if (!hunter.shouldSkipMemoryCache()) {
-      cache.set(hunter.getKey(), hunter.getResult());
+    ImageLoadResult result = hunter.getResult();
+    if (!hunter.shouldSkipMemoryCache() && result.bitmap != null) {
+      cache.set(hunter.getKey(), result.bitmap);
     }
     hunterMap.remove(hunter.getKey());
     batch(hunter);

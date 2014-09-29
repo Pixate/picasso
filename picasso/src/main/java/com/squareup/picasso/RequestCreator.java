@@ -28,6 +28,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.jetbrains.annotations.TestOnly;
 
+import com.squareup.picasso.BitmapHunter.ImageLoadResult;
+
 import static com.squareup.picasso.BitmapHunter.forRequest;
 import static com.squareup.picasso.Picasso.LoadedFrom.MEMORY;
 import static com.squareup.picasso.Picasso.Priority;
@@ -301,10 +303,10 @@ public class RequestCreator {
   /**
    * Synchronously fulfill this request. Must not be called from the main thread.
    * <p>
-   * <em>Note</em>: The result of this operation is not cached in memory because the underlying
-   * {@link Cache} implementation is not guaranteed to be thread-safe.
+   * <em>Note</em>: The result of this operation is not cached in memory because the
+   * underlying {@link Cache} implementation is not guaranteed to be thread-safe.
    */
-  public Bitmap get() throws IOException {
+  public ImageLoadResult get() throws IOException {
     long started = System.nanoTime();
     checkNotMain();
 
@@ -604,7 +606,9 @@ public class RequestCreator {
     if (!skipMemoryCache) {
       Bitmap bitmap = picasso.quickMemoryCacheCheck(action.getKey());
       if (bitmap != null) {
-        action.complete(bitmap, MEMORY);
+        ImageLoadResult result = new ImageLoadResult();
+        result.bitmap = bitmap;
+        action.complete(result, MEMORY);
         return;
       }
     }

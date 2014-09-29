@@ -104,7 +104,7 @@ public class RequestCreatorTest {
     new Thread(new Runnable() {
       @Override public void run() {
         try {
-          result[0] = new RequestCreator(picasso, null, 0).get();
+          result[0] = new RequestCreator(picasso, null, 0).get().bitmap;
         } catch (IOException e) {
           fail(e.getMessage());
         } finally {

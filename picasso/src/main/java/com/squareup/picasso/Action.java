@@ -15,8 +15,9 @@
  */
 package com.squareup.picasso;
 
-import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+
+import com.squareup.picasso.BitmapHunter.ImageLoadResult;
 import com.squareup.picasso.Picasso.Priority;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
@@ -57,7 +58,7 @@ abstract class Action<T> {
     this.tag = (tag != null ? tag : this);
   }
 
-  abstract void complete(Bitmap result, Picasso.LoadedFrom from);
+  abstract void complete(ImageLoadResult result, Picasso.LoadedFrom from);
 
   abstract void error();
 

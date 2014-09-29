@@ -15,26 +15,33 @@
  */
 package com.squareup.picasso;
 
-import android.graphics.Bitmap;
+import com.squareup.picasso.BitmapHunter.ImageLoadResult;
+
 import android.graphics.drawable.Drawable;
 
 final class TargetAction extends Action<Target> {
 
-  TargetAction(Picasso picasso, Target target, Request data, boolean skipCache,
-        int errorResId, Drawable errorDrawable, String key, Object tag) {
+  TargetAction(Picasso picasso, Target target, Request data, boolean skipCache, int errorResId,
+      Drawable errorDrawable, String key, Object tag) {
     super(picasso, target, data, skipCache, false, errorResId, errorDrawable, key, tag);
   }
 
-  @Override void complete(Bitmap result, Picasso.LoadedFrom from) {
+  @Override void complete(ImageLoadResult result, Picasso.LoadedFrom from) {
     if (result == null) {
-      throw new AssertionError(
-          String.format("Attempted to complete action with no result!\n%s", this));
+      throw new AssertionError(String.format("Attempted to complete action with no result!\n%s",
+          this));
     }
     Target target = getTarget();
     if (target != null) {
-      target.onBitmapLoaded(result, from);
-      if (result.isRecycled()) {
-        throw new IllegalStateException("Target callback must not recycle bitmap!");
+      if (result.bitmap != null) {
+        target.onBitmapLoaded(result.bitmap, from);
+        if (result.bitmap.isRecycled()) {
+          throw new IllegalStateException("Target callback must not recycle bitmap!");
+        }
+      } else if (result.gifStream != null) {
+        target.onGifStreamAvailable(result.gifStream, from);
+      } else {
+        error();
       }
     }
   }

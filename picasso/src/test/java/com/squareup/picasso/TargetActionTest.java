@@ -15,6 +15,8 @@
  */
 package com.squareup.picasso;
 
+import java.io.InputStream;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -23,6 +25,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+
+import com.squareup.picasso.BitmapHunter.ImageLoadResult;
+import com.squareup.picasso.Picasso.LoadedFrom;
 
 import static com.squareup.picasso.Picasso.LoadedFrom.MEMORY;
 import static com.squareup.picasso.Picasso.RequestTransformer.IDENTITY;
@@ -52,7 +57,7 @@ public class TargetActionTest {
     Target target = mockTarget();
     TargetAction request =
         new TargetAction(mock(Picasso.class), target, null, false, 0, null, URI_KEY_1, null);
-    request.complete(BITMAP_3, MEMORY);
+    request.complete(new ImageLoadResult(BITMAP_3), MEMORY);
     verify(target).onBitmapLoaded(BITMAP_3, MEMORY);
   }
 
@@ -89,6 +94,10 @@ public class TargetActionTest {
       @Override public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
         bitmap.recycle();
       }
+      
+      @Override public void onGifStreamAvailable(InputStream stream, LoadedFrom from) {
+        throw new AssertionError();
+      }
 
       @Override public void onBitmapFailed(Drawable errorDrawable) {
         throw new AssertionError();
@@ -102,7 +111,7 @@ public class TargetActionTest {
 
     TargetAction tr = new TargetAction(picasso, bad, null, false, 0, null, URI_KEY_1, null);
     try {
-      tr.complete(BITMAP_1, MEMORY);
+      tr.complete(new ImageLoadResult(BITMAP_1), MEMORY);
       fail();
     } catch (IllegalStateException expected) {
     }
