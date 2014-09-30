@@ -15,8 +15,6 @@
  */
 package com.squareup.picasso;
 
-import com.squareup.picasso.BitmapHunter.ImageLoadResult;
-
 import android.graphics.drawable.Drawable;
 
 final class TargetAction extends Action<Target> {

@@ -15,8 +15,6 @@
  */
 package com.squareup.picasso;
 
-import com.squareup.picasso.BitmapHunter.ImageLoadResult;
-
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.appwidget.AppWidgetManager;

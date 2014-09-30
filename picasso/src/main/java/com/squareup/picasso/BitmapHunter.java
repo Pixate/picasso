@@ -19,7 +19,6 @@ import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.net.NetworkInfo;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -40,20 +39,6 @@ import static com.squareup.picasso.Utils.getLogIdsForHunter;
 import static com.squareup.picasso.Utils.log;
 
 class BitmapHunter implements Runnable {
-  static class ImageLoadResult {
-    Bitmap bitmap;
-    InputStream gifStream;
-
-    ImageLoadResult() {
-      this.bitmap = null;
-      this.gifStream = null;
-    }
-
-    ImageLoadResult(Bitmap bitmap) {
-      this.bitmap = bitmap;
-      this.gifStream = null;
-    }
-  }
 
   /**
    * Global lock for bitmap decoding to ensure that we are only are decoding one at a

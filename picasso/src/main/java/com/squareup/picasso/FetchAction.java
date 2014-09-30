@@ -15,8 +15,6 @@
  */
 package com.squareup.picasso;
 
-import com.squareup.picasso.BitmapHunter.ImageLoadResult;
-
 class FetchAction extends Action<Void> {
   FetchAction(Picasso picasso, Request data, boolean skipCache, String key, Object tag) {
     super(picasso, null, data, skipCache, false, 0, null, key, tag);

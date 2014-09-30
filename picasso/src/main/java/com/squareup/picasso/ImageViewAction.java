@@ -19,8 +19,6 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.widget.ImageView;
 
-import com.squareup.picasso.BitmapHunter.ImageLoadResult;
-
 class ImageViewAction extends Action<ImageView> {
 
   Callback callback;

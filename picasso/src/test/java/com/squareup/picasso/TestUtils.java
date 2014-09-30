@@ -32,7 +32,7 @@ import java.util.Arrays;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import com.squareup.picasso.BitmapHunter.ImageLoadResult;
+import com.squareup.picasso.ImageLoadResult;
 
 import static android.content.ContentResolver.SCHEME_ANDROID_RESOURCE;
 import static android.provider.ContactsContract.Contacts.CONTENT_URI;
