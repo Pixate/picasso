@@ -29,18 +29,12 @@ import com.squareup.picasso.Downloader.Response;
 
 class NetworkRequestHandler extends RequestHandler {
   static final int RETRY_COUNT = 2;
-  private static final int MARKER = 65536;
 
   private static final String SCHEME_HTTP = "http";
   private static final String SCHEME_HTTPS = "https";
 
   private final Downloader downloader;
   private final Stats stats;
-
-  static class GifPrecheckResult {
-    InputStream inputStream;
-    boolean isGif;
-  }
 
   public NetworkRequestHandler(Downloader downloader, Stats stats) {
     this.downloader = downloader;
@@ -106,33 +100,6 @@ class NetworkRequestHandler extends RequestHandler {
 
   @Override boolean supportsReplay() {
     return true;
-  }
-
-  /**
-   * Determines if stream is GIF. The stream saved in the returned
-   * {@link GifPrecheckResult#inputStream} member should be used for all subsequent
-   * operations, because this method reads the first few bytes and therefore creates a
-   * markable stream from the passed-in stream.
-   * 
-   * @param stream
-   * @return {@link GifPrecheckResult}
-   * @throws IOException
-   */
-  private GifPrecheckResult precheckForGif(InputStream stream)
-      throws IOException {
-    GifPrecheckResult result = new GifPrecheckResult();
-    MarkableInputStream markStream;
-    if (stream instanceof MarkableInputStream) {
-      markStream = (MarkableInputStream) stream;
-    } else {
-      markStream = new MarkableInputStream(stream);
-    }
-    result.inputStream = markStream;
-
-    long mark = markStream.savePosition(MARKER);
-    result.isGif = Utils.isGifFile(markStream);
-    markStream.reset(mark);
-    return result;
   }
 
   private Bitmap decodeStream(InputStream stream, Request data) throws IOException {

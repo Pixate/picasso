@@ -46,6 +46,26 @@ import com.squareup.picasso.Picasso.LoadedFrom;
  * @see Picasso.Builder#addRequestHandler(RequestHandler)
  */
 public abstract class RequestHandler {
+  protected static final int MARKER = 65536;
+
+  /**
+   * Represents the result of a {@link RequestHandler#precheckForGif(InputStream)} call.
+   * @author bill
+   *
+   */
+  protected static class GifPrecheckResult {
+    /**
+     * The stream that was checked for being a GIF, <em>or</em> a wrapped version of the
+     * same if it was not markable. A markable stream is required since the first few
+     * bytes are read then the stream is reset so that future decoding operations can
+     * succeed. Therefore callers to {@link RequestHandler#precheckForGif(InputStream)}
+     * should use this returned instance of the stream to be sure to avoid any exceptions
+     * concerning trying to reset an unmarkable stream.
+     */
+    InputStream inputStream;
+    boolean isGif;
+  }
+
   /**
    * {@link Result} represents the result of a {@link #load(Request)} call in a
    * {@link RequestHandler}.
@@ -186,4 +206,32 @@ public abstract class RequestHandler {
     options.inSampleSize = sampleSize;
     options.inJustDecodeBounds = false;
   }
+
+  /**
+   * Determines if stream contains a GIF image. The stream saved in the returned
+   * {@link GifPrecheckResult#inputStream} member should be used for all subsequent
+   * operations, because this method reads the first few bytes and therefore creates a
+   * markable stream from the passed-in stream.
+   * 
+   * @param stream
+   * @return {@link GifPrecheckResult}
+   * @throws IOException
+   */
+  protected GifPrecheckResult precheckForGif(InputStream stream)
+      throws IOException {
+    GifPrecheckResult result = new GifPrecheckResult();
+    MarkableInputStream markStream;
+    if (stream instanceof MarkableInputStream) {
+      markStream = (MarkableInputStream) stream;
+    } else {
+      markStream = new MarkableInputStream(stream);
+    }
+    result.inputStream = markStream;
+
+    long mark = markStream.savePosition(MARKER);
+    result.isGif = Utils.isGifFile(markStream);
+    markStream.reset(mark);
+    return result;
+  }
+
 }
