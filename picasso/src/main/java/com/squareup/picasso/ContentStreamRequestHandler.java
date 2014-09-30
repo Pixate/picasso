@@ -49,6 +49,11 @@ class ContentStreamRequestHandler extends RequestHandler {
       InputStream is = null;
       try {
         is = contentResolver.openInputStream(data.uri);
+        GifPrecheckResult precheck = precheckForGif(is);
+        if (precheck.isGif) {
+          return new Result(precheck.inputStream, loadedFrom);
+        }
+        is = precheck.inputStream;
         BitmapFactory.decodeStream(is, null, options);
       } finally {
         Utils.closeQuietly(is);
@@ -56,6 +61,11 @@ class ContentStreamRequestHandler extends RequestHandler {
       calculateInSampleSize(data.targetWidth, data.targetHeight, options, data);
     }
     InputStream is = contentResolver.openInputStream(data.uri);
+    GifPrecheckResult precheck = precheckForGif(is);
+    if (precheck.isGif) {
+      return new Result(precheck.inputStream, loadedFrom);
+    }
+    is = precheck.inputStream;
     try {
       Bitmap bitmap = BitmapFactory.decodeStream(is, null, options);
       return new Result(bitmap, loadedFrom, exifOrientation);
