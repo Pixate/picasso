@@ -22,8 +22,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.NetworkInfo;
 
-import com.squareup.picasso.Picasso.LoadedFrom;
-
 /**
  * {@link RequestHandler} allows you to extend Picasso to load images in ways
  * that are not supported by default in the library.
@@ -34,15 +32,15 @@ import com.squareup.picasso.Picasso.LoadedFrom;
  * override two methods ({@link #canHandleRequest(Request)} and
  * {@link #load(Request)}) with your custom logic to load images.
  * </p>
- * 
+ *
  * <p>
  * You should then register your {@link RequestHandler} using
  * {@link Picasso.Builder#addRequestHandler(RequestHandler)}
  * </p>
- * 
+ *
  * <b>NOTE:</b> This is a beta feature. The API is subject to change in a
  * backwards incompatible way at any time.
- * 
+ *
  * @see Picasso.Builder#addRequestHandler(RequestHandler)
  */
 public abstract class RequestHandler {
@@ -69,7 +67,7 @@ public abstract class RequestHandler {
   /**
    * {@link Result} represents the result of a {@link #load(Request)} call in a
    * {@link RequestHandler}.
-   * 
+   *
    * @see RequestHandler
    * @see #load(Request)
    */
@@ -85,7 +83,7 @@ public abstract class RequestHandler {
 
     /**
      * Use only when stream has been identified as containing GIF data.
-     * 
+     *
      * @param gifStream {@link InputStream} containing GIF data.
      * @param loadedFrom {@link LoadedFrom}.
      */
@@ -95,7 +93,7 @@ public abstract class RequestHandler {
 
     /**
      * Use only when stream has been identified as containing GIF data.
-     * 
+     *
      * @param gifStream {@link InputStream} containing GIF data.
      * @param loadedFrom {@link LoadedFrom}.
      * @param exifOrientation
@@ -159,7 +157,7 @@ public abstract class RequestHandler {
 
   /**
    * Loads an image for the given {@link Request}.
-   * 
+   *
    * @param data the {@link android.net.Uri} to load the image from.
    * @return A {@link Result} instance representing the result.
    */
@@ -223,7 +221,7 @@ public abstract class RequestHandler {
    * {@link GifPrecheckResult#inputStream} member should be used for all subsequent
    * operations, because this method reads the first few bytes and therefore creates a
    * markable stream from the passed-in stream.
-   * 
+   *
    * @param stream
    * @return {@link GifPrecheckResult}
    * @throws IOException

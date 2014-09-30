@@ -42,7 +42,8 @@ class ContentStreamRequestHandler extends RequestHandler {
     return decodeContentStream(data, DISK, /* exifOrientation */ 0);
   }
 
-  protected Result decodeContentStream(Request data, LoadedFrom loadedFrom, int exifOrientation) throws IOException {
+  protected Result decodeContentStream(Request data, LoadedFrom loadedFrom, int exifOrientation)
+      throws IOException {
     ContentResolver contentResolver = context.getContentResolver();
     final BitmapFactory.Options options = createBitmapOptions(data);
     if (requiresInSampleSize(options)) {
