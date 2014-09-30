@@ -37,14 +37,7 @@ class NetworkRequestHandler extends RequestHandler {
   private final Downloader downloader;
   private final Stats stats;
 
-  static class DecodeResult {
-    /**
-     * If null, check isGif and inputStream.
-     */
-    Bitmap bitmap;
-    /**
-     * Null if bitmap is non-null. Used only for a GIF stream.
-     */
+  static class GifPrecheckResult {
     InputStream inputStream;
     boolean isGif;
   }
@@ -89,12 +82,13 @@ class NetworkRequestHandler extends RequestHandler {
 
     boolean isGif = false;
     try {
-      DecodeResult result = decodeWithGifRecognition(is, data);
+      GifPrecheckResult result = precheckForGif(is);
       isGif = result.isGif;
       if (isGif) {
         return new Result(result.inputStream, loadedFrom);
+      } else {
+        return new Result(decodeStream(result.inputStream, data), loadedFrom);
       }
-      return new Result(result.bitmap, loadedFrom);
     } finally {
       if (!isGif) {
         Utils.closeQuietly(is);
@@ -115,37 +109,29 @@ class NetworkRequestHandler extends RequestHandler {
   }
 
   /**
-   * Will check first if stream is GIF. If so, will put the stream in the result and
-   * return immediately. If not, calls {@link #decodeStream(InputStream, Request)} and
-   * puts resulting bitmap in result.
+   * Determines if stream is GIF. The stream saved in the returned
+   * {@link GifPrecheckResult#inputStream} member should be used for all subsequent
+   * operations, because this method reads the first few bytes and therefore creates a
+   * markable stream from the passed-in stream.
    * 
    * @param stream
-   * @param data
-   * @return {@link DecodeResult}
+   * @return {@link GifPrecheckResult}
    * @throws IOException
    */
-  private DecodeResult decodeWithGifRecognition(InputStream stream, Request data)
+  private GifPrecheckResult precheckForGif(InputStream stream)
       throws IOException {
+    GifPrecheckResult result = new GifPrecheckResult();
     MarkableInputStream markStream;
     if (stream instanceof MarkableInputStream) {
       markStream = (MarkableInputStream) stream;
     } else {
       markStream = new MarkableInputStream(stream);
     }
+    result.inputStream = markStream;
 
     long mark = markStream.savePosition(MARKER);
-    DecodeResult result = new DecodeResult();
     result.isGif = Utils.isGifFile(markStream);
     markStream.reset(mark);
-
-    if (result.isGif) {
-      result.bitmap = null;
-      result.inputStream = markStream;
-    } else {
-      result.bitmap = decodeStream(markStream, data);
-      result.inputStream = null;
-    }
-
     return result;
   }
 
