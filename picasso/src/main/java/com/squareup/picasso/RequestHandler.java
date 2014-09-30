@@ -90,10 +90,21 @@ public abstract class RequestHandler {
      * @param loadedFrom {@link LoadedFrom}.
      */
     public Result(InputStream gifStream, Picasso.LoadedFrom loadedFrom) {
+      this(gifStream, loadedFrom, 0);
+    }
+
+    /**
+     * Use only when stream has been identified as containing GIF data.
+     * 
+     * @param gifStream {@link InputStream} containing GIF data.
+     * @param loadedFrom {@link LoadedFrom}.
+     * @param exifOrientation
+     */
+    public Result(InputStream gifStream, Picasso.LoadedFrom loadedFrom, int exifOrientation) {
       this.gifStream = gifStream;
       this.bitmap = null;
       this.loadedFrom = loadedFrom;
-      this.exifOrientation = 0;
+      this.exifOrientation = exifOrientation;
     }
 
     Result(Bitmap bitmap, Picasso.LoadedFrom loadedFrom, int exifOrientation) {

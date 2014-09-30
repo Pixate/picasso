@@ -22,6 +22,8 @@ import android.graphics.BitmapFactory;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.squareup.picasso.Picasso.LoadedFrom;
+
 import static android.content.ContentResolver.SCHEME_CONTENT;
 import static com.squareup.picasso.Picasso.LoadedFrom.DISK;
 
@@ -37,10 +39,10 @@ class ContentStreamRequestHandler extends RequestHandler {
   }
 
   @Override public Result load(Request data) throws IOException {
-    return new Result(decodeContentStream(data), DISK);
+    return decodeContentStream(data, DISK, /* exifOrientation */ 0);
   }
 
-  protected Bitmap decodeContentStream(Request data) throws IOException {
+  protected Result decodeContentStream(Request data, LoadedFrom loadedFrom, int exifOrientation) throws IOException {
     ContentResolver contentResolver = context.getContentResolver();
     final BitmapFactory.Options options = createBitmapOptions(data);
     if (requiresInSampleSize(options)) {
@@ -55,7 +57,8 @@ class ContentStreamRequestHandler extends RequestHandler {
     }
     InputStream is = contentResolver.openInputStream(data.uri);
     try {
-      return BitmapFactory.decodeStream(is, null, options);
+      Bitmap bitmap = BitmapFactory.decodeStream(is, null, options);
+      return new Result(bitmap, loadedFrom, exifOrientation);
     } finally {
       Utils.closeQuietly(is);
     }
