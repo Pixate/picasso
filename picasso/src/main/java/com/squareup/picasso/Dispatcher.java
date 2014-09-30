@@ -163,6 +163,10 @@ class Dispatcher {
   }
 
   void performSubmit(Action action) {
+    performSubmit(action, true);
+  }
+
+  void performSubmit(Action action, boolean dismissFailed) {
     if (pausedTags.contains(action.getTag())) {
       pausedActions.put(action.getTarget(), action);
       if (action.getPicasso().loggingEnabled) {
@@ -188,7 +192,9 @@ class Dispatcher {
     hunter = forRequest(action.getPicasso(), this, cache, stats, action);
     hunter.future = service.submit(hunter);
     hunterMap.put(action.getKey(), hunter);
-    failedActions.remove(action.getTarget());
+    if (dismissFailed) {
+      failedActions.remove(action.getTarget());
+    }
 
     if (action.getPicasso().loggingEnabled) {
       log(OWNER_DISPATCHER, VERB_ENQUEUED, action.request.logId());
@@ -397,7 +403,7 @@ class Dispatcher {
         if (action.getPicasso().loggingEnabled) {
           log(OWNER_DISPATCHER, VERB_REPLAYING, action.getRequest().logId());
         }
-        performSubmit(action);
+        performSubmit(action, false);
       }
     }
   }

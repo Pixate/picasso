@@ -44,6 +44,7 @@ import static com.squareup.picasso.Dispatcher.REQUEST_GCED;
 import static com.squareup.picasso.Picasso.LoadedFrom.MEMORY;
 import static com.squareup.picasso.Utils.OWNER_MAIN;
 import static com.squareup.picasso.Utils.THREAD_PREFIX;
+import static com.squareup.picasso.Utils.VERB_CANCELED;
 import static com.squareup.picasso.Utils.VERB_COMPLETED;
 import static com.squareup.picasso.Utils.VERB_ERRORED;
 import static com.squareup.picasso.Utils.VERB_RESUMED;
@@ -119,6 +120,9 @@ public class Picasso {
         }
         case REQUEST_GCED: {
           Action action = (Action) msg.obj;
+          if (action.getPicasso().loggingEnabled) {
+            log(OWNER_MAIN, VERB_CANCELED, action.request.logId(), "target got garbage collected");
+          }
           action.picasso.cancelExistingRequest(action.getTarget());
           break;
         }
@@ -164,8 +168,11 @@ public class Picasso {
     this.listener = listener;
     this.requestTransformer = requestTransformer;
 
-    final int extraCount = (extraRequestHandlers != null ? extraRequestHandlers.size() : 0);
-    final List<RequestHandler> allRequestHandlers = new ArrayList<RequestHandler>(7 + extraCount);
+    int builtInHandlers = 7; // Adjust this as internal handlers are added or removed.
+    int extraCount = (extraRequestHandlers != null ? extraRequestHandlers.size() : 0);
+    List<RequestHandler> allRequestHandlers =
+        new ArrayList<RequestHandler>(builtInHandlers + extraCount);
+
     // ResourceRequestHandler needs to be the first in the list to avoid
     // forcing other RequestHandlers to perform null checks on request.uri
     // to cover the (request.resourceId != 0) case.
