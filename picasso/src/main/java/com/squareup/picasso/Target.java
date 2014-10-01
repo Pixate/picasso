@@ -15,6 +15,8 @@
  */
 package com.squareup.picasso;
 
+import java.io.InputStream;
+
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 
@@ -49,9 +51,12 @@ public interface Target {
   /**
    * Callback invoked right before your request is submitted.
    * <p>
-   * <strong>Note:</strong> The passed {@link Drawable} may be {@code null} if none has been
-   * specified via {@link RequestCreator#placeholder(android.graphics.drawable.Drawable)}
-   * or {@link RequestCreator#placeholder(int)}.
+   * <strong>Note:</strong> The passed {@link Drawable} may be {@code null} if none has
+   * been specified via
+   * {@link RequestCreator#placeholder(android.graphics.drawable.Drawable)} or
+   * {@link RequestCreator#placeholder(int)}.
    */
   void onPrepareLoad(Drawable placeHolderDrawable);
+
+  void onGifStreamAvailable(InputStream stream, LoadedFrom from);
 }

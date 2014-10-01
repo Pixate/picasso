@@ -24,6 +24,8 @@ import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import com.squareup.picasso.ImageLoadResult;
+
 import static com.squareup.picasso.Picasso.LoadedFrom.NETWORK;
 import static com.squareup.picasso.Picasso.RequestTransformer.IDENTITY;
 import static com.squareup.picasso.TestUtils.BITMAP_1;
@@ -48,7 +50,7 @@ public class RemoteViewsActionTest {
 
   @Test public void completeSetsBitmapOnRemoteViews() throws Exception {
     RemoteViewsAction action = createAction();
-    action.complete(BITMAP_1, NETWORK);
+    action.complete(new ImageLoadResult(BITMAP_1), NETWORK);
     verify(remoteViews).setImageViewBitmap(1, BITMAP_1);
   }
 

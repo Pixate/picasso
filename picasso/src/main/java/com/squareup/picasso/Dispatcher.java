@@ -351,8 +351,9 @@ class Dispatcher {
   }
 
   void performComplete(BitmapHunter hunter) {
-    if (!hunter.shouldSkipMemoryCache()) {
-      cache.set(hunter.getKey(), hunter.getResult());
+    ImageLoadResult result = hunter.getResult();
+    if (!hunter.shouldSkipMemoryCache() && result.bitmap != null) {
+      cache.set(hunter.getKey(), result.bitmap);
     }
     hunterMap.remove(hunter.getKey());
     batch(hunter);

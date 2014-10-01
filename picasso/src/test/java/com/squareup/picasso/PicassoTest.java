@@ -30,6 +30,8 @@ import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import com.squareup.picasso.ImageLoadResult;
+
 import static com.squareup.picasso.Picasso.Listener;
 import static com.squareup.picasso.Picasso.LoadedFrom.MEMORY;
 import static com.squareup.picasso.RemoteViewsAction.RemoteViewsTarget;
@@ -120,8 +122,8 @@ public class PicassoTest {
     when(hunter.getActions()).thenReturn(Arrays.asList(action1, action2));
     when(hunter.getLoadedFrom()).thenReturn(MEMORY);
     picasso.complete(hunter);
-    verify(action1).complete(BITMAP_1, MEMORY);
-    verify(action2, never()).complete(eq(BITMAP_1), any(Picasso.LoadedFrom.class));
+    verify(action1).complete(new ImageLoadResult(BITMAP_1), MEMORY);
+    verify(action2, never()).complete(new ImageLoadResult(eq(BITMAP_1)), any(Picasso.LoadedFrom.class));
   }
 
   @Test public void completeInvokesErrorOnAllFailedRequests() throws Exception {
@@ -144,7 +146,7 @@ public class PicassoTest {
     when(hunter.getAction()).thenReturn(action);
     when(hunter.getActions()).thenReturn(Collections.<Action>emptyList());
     picasso.complete(hunter);
-    verify(action).complete(BITMAP_1, MEMORY);
+    verify(action).complete(new ImageLoadResult(BITMAP_1), MEMORY);
   }
 
   @Test public void completeWithReplayDoesNotRemove() throws Exception {
@@ -157,7 +159,7 @@ public class PicassoTest {
     assertThat(picasso.targetToAction).hasSize(1);
     picasso.complete(hunter);
     assertThat(picasso.targetToAction).hasSize(1);
-    verify(action).complete(BITMAP_1, MEMORY);
+    verify(action).complete(new ImageLoadResult(BITMAP_1), MEMORY);
   }
 
   @Test public void completeDeliversToSingleAndMultiple() throws Exception {
@@ -168,8 +170,8 @@ public class PicassoTest {
     when(hunter.getAction()).thenReturn(action);
     when(hunter.getActions()).thenReturn(Arrays.asList(action2));
     picasso.complete(hunter);
-    verify(action).complete(BITMAP_1, MEMORY);
-    verify(action2).complete(BITMAP_1, MEMORY);
+    verify(action).complete(new ImageLoadResult(BITMAP_1), MEMORY);
+    verify(action2).complete(new ImageLoadResult(BITMAP_1), MEMORY);
   }
 
   @Test public void completeSkipsIfNoActions() throws Exception {
@@ -202,7 +204,7 @@ public class PicassoTest {
     when(cache.get(URI_KEY_1)).thenReturn(BITMAP_1);
     Action action = mockAction(URI_KEY_1, URI_1);
     picasso.resumeAction(action);
-    verify(action).complete(BITMAP_1, MEMORY);
+    verify(action).complete(new ImageLoadResult(BITMAP_1), MEMORY);
   }
 
   @Test public void cancelExistingRequestWithUnknownTarget() throws Exception {

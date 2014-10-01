@@ -456,7 +456,7 @@ public class Picasso {
 
     Uri uri = hunter.getData().uri;
     Exception exception = hunter.getException();
-    Bitmap result = hunter.getResult();
+    ImageLoadResult result = hunter.getResult();
     LoadedFrom from = hunter.getLoadedFrom();
 
     if (single != null) {
@@ -484,7 +484,8 @@ public class Picasso {
 
     if (bitmap != null) {
       // Resumed action is cached, complete immediately.
-      deliverAction(bitmap, MEMORY, action);
+      ImageLoadResult result = new ImageLoadResult(bitmap);
+      deliverAction(result, MEMORY, action);
       if (loggingEnabled) {
         log(OWNER_MAIN, VERB_COMPLETED, action.request.logId(), "from " + MEMORY);
       }
@@ -497,7 +498,7 @@ public class Picasso {
     }
   }
 
-  private void deliverAction(Bitmap result, LoadedFrom from, Action action) {
+  private void deliverAction(ImageLoadResult result, LoadedFrom from, Action action) {
     if (action.isCancelled()) {
       return;
     }

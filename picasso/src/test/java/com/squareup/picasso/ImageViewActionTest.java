@@ -23,6 +23,8 @@ import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import com.squareup.picasso.ImageLoadResult;
+
 import static com.squareup.picasso.Picasso.LoadedFrom.MEMORY;
 import static com.squareup.picasso.Picasso.RequestTransformer.IDENTITY;
 import static com.squareup.picasso.TestUtils.BITMAP_1;
@@ -56,7 +58,7 @@ public class ImageViewActionTest {
     ImageViewAction request =
         new ImageViewAction(picasso, target, null, false, false, 0, null, URI_KEY_1, null, callback);
     request.target.clear();
-    request.complete(BITMAP_1, MEMORY);
+    request.complete(new ImageLoadResult(BITMAP_1), MEMORY);
     verifyZeroInteractions(target);
     verifyZeroInteractions(callback);
   }
@@ -83,7 +85,7 @@ public class ImageViewActionTest {
     Callback callback = mockCallback();
     ImageViewAction request =
         new ImageViewAction(picasso, target, null, false, false, 0, null, URI_KEY_1, null, callback);
-    request.complete(BITMAP_1, MEMORY);
+    request.complete(new ImageLoadResult(BITMAP_1), MEMORY);
     verify(target).setImageDrawable(any(PicassoDrawable.class));
     verify(callback).onSuccess();
   }

@@ -39,7 +39,7 @@ class FileRequestHandler extends ContentStreamRequestHandler {
   }
 
   @Override public Result load(Request data) throws IOException {
-    return new Result(decodeContentStream(data), DISK, getFileExifRotation(data.uri));
+    return decodeContentStream(data, DISK, getFileExifRotation(data.uri));
   }
 
   static int getFileExifRotation(Uri uri) throws IOException {

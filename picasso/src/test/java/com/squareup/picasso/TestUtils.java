@@ -32,6 +32,8 @@ import java.util.Arrays;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import com.squareup.picasso.ImageLoadResult;
+
 import static android.content.ContentResolver.SCHEME_ANDROID_RESOURCE;
 import static android.provider.ContactsContract.Contacts.CONTENT_URI;
 import static android.provider.ContactsContract.Contacts.Photo.CONTENT_DIRECTORY;
@@ -225,7 +227,7 @@ class TestUtils {
     Request data = new Request.Builder(URI_1).build();
     BitmapHunter hunter = mock(BitmapHunter.class);
     when(hunter.getKey()).thenReturn(key);
-    when(hunter.getResult()).thenReturn(result);
+    when(hunter.getResult()).thenReturn(new ImageLoadResult(result));
     when(hunter.getData()).thenReturn(data);
     when(hunter.shouldSkipMemoryCache()).thenReturn(skipCache);
     when(hunter.getAction()).thenReturn(action);

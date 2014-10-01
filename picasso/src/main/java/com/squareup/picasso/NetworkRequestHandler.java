@@ -15,19 +15,20 @@
  */
 package com.squareup.picasso;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.NetworkInfo;
-import java.io.IOException;
-import java.io.InputStream;
-
-import static com.squareup.picasso.Downloader.Response;
 import static com.squareup.picasso.Picasso.LoadedFrom.DISK;
 import static com.squareup.picasso.Picasso.LoadedFrom.NETWORK;
 
+import java.io.IOException;
+import java.io.InputStream;
+
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.NetworkInfo;
+
+import com.squareup.picasso.Downloader.Response;
+
 class NetworkRequestHandler extends RequestHandler {
   static final int RETRY_COUNT = 2;
-  private static final int MARKER = 65536;
 
   private static final String SCHEME_HTTP = "http";
   private static final String SCHEME_HTTPS = "https";
@@ -62,7 +63,8 @@ class NetworkRequestHandler extends RequestHandler {
     if (is == null) {
       return null;
     }
-    // Sometimes response content length is zero when requests are being replayed. Haven't found
+    // Sometimes response content length is zero when requests are being
+    // replayed. Haven't found
     // root cause to this but retrying the request seems safe to do so.
     if (response.getContentLength() == 0) {
       Utils.closeQuietly(is);
@@ -71,10 +73,20 @@ class NetworkRequestHandler extends RequestHandler {
     if (loadedFrom == NETWORK && response.getContentLength() > 0) {
       stats.dispatchDownloadFinished(response.getContentLength());
     }
+
+    boolean isGif = false;
     try {
-      return new Result(decodeStream(is, data), loadedFrom);
+      GifPrecheckResult result = precheckForGif(is);
+      isGif = result.isGif;
+      if (isGif) {
+        return new Result(result.inputStream, loadedFrom);
+      } else {
+        return new Result(decodeStream(result.inputStream, data), loadedFrom);
+      }
     } finally {
-      Utils.closeQuietly(is);
+      if (!isGif) {
+        Utils.closeQuietly(is);
+      }
     }
   }
 
@@ -91,8 +103,14 @@ class NetworkRequestHandler extends RequestHandler {
   }
 
   private Bitmap decodeStream(InputStream stream, Request data) throws IOException {
-    MarkableInputStream markStream = new MarkableInputStream(stream);
-    stream = markStream;
+    MarkableInputStream markStream;
+
+    if (stream instanceof MarkableInputStream) {
+      markStream = (MarkableInputStream) stream;
+    } else {
+      markStream = new MarkableInputStream(stream);
+      stream = markStream;
+    }
 
     long mark = markStream.savePosition(MARKER);
 
@@ -101,7 +119,8 @@ class NetworkRequestHandler extends RequestHandler {
 
     boolean isWebPFile = Utils.isWebPFile(stream);
     markStream.reset(mark);
-    // When decode WebP network stream, BitmapFactory throw JNI Exception and make app crash.
+    // When decode WebP network stream, BitmapFactory throw JNI Exception and
+    // make app crash.
     // Decode byte array instead
     if (isWebPFile) {
       byte[] bytes = Utils.toByteArray(stream);

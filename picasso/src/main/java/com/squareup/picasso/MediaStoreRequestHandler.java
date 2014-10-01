@@ -61,7 +61,7 @@ class MediaStoreRequestHandler extends ContentStreamRequestHandler {
     if (data.hasSize()) {
       PicassoKind picassoKind = getPicassoKind(data.targetWidth, data.targetHeight);
       if (!isVideo && picassoKind == FULL) {
-        return new Result(decodeContentStream(data), DISK, exifOrientation);
+        return decodeContentStream(data, DISK, exifOrientation);
       }
 
       long id = parseId(data.uri);
@@ -89,7 +89,7 @@ class MediaStoreRequestHandler extends ContentStreamRequestHandler {
       }
     }
 
-    return new Result(decodeContentStream(data), DISK, exifOrientation);
+    return decodeContentStream(data, DISK, exifOrientation);
   }
 
   static PicassoKind getPicassoKind(int targetWidth, int targetHeight) {

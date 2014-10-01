@@ -175,7 +175,7 @@ public class DispatcherTest {
   @Test public void performCompleteSetsResultInCache() throws Exception {
     BitmapHunter hunter = mockHunter(URI_KEY_1, BITMAP_1, false);
     dispatcher.performComplete(hunter);
-    verify(cache).set(hunter.getKey(), hunter.getResult());
+    verify(cache).set(hunter.getKey(), hunter.getResult().bitmap);
   }
 
   @Test public void performCompleteWithSkipCacheDoesNotCache() throws Exception {
